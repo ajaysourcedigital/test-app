@@ -1,0 +1,35 @@
+name: test
+on:
+  push:
+    branches:
+      - "main"
+env:
+    username: ajaykumar
+    vm_name: GCP-vm
+    vm_zone: 'us-central1-a'
+jobs:
+  compute-engine-deploy:  
+    name: Deploy on Compute Engine VM
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:   
+    - id: 'auth'
+      uses: 'google-github-actions/auth@v0'
+      with:
+        credentials_json: '${{ secrets.gcp_credentials }}'
+
+    - id: 'compute-ssh'
+      uses: 'google-github-actions/ssh-compute@v0'
+      with:
+        instance_name: ${{env.vm_name}}
+        zone: ${{env.vm_zone}}
+        user: ${{env.username}}
+        ssh_private_key: '${{ secrets.GCP_SSH_PRIVATE_KEY }}'
+        command: sh /home/${{env.username}}/script.sh
+        
+    - id: 'stdmsg'
+      run: |-
+        echo '${{ steps.compute-ssh.outputs.stdout }}'
+        echo '${{ steps.compute-ssh.outputs.stderr }}'
